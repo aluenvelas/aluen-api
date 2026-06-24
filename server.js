@@ -6,7 +6,12 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const app = express();
-app.use(cors({ origin: '*' }));
+app.use(cors({
+  origin: [
+    'gestion-aluen.netlify.app',
+    'http://localhost:3001'
+  ]
+}));
 app.use(express.json());
 
 // ── CONEXIÓN ──
