@@ -78,6 +78,7 @@ const PedidoSchema = new mongoose.Schema({
   canal:     { type: String, default: 'Instagram' },
   estado:    { type: String, default: 'Pendiente', enum: ['Pendiente','En proceso','Entregado','Cancelado'] },
   notas:     { type: String, default: '' },
+  pago:      { type: String, default: 'Efectivo', enum: ['Efectivo','Transferencia','Tarjeta'] },
 }, { timestamps: true });
 
 const InventarioSchema = new mongoose.Schema({
@@ -87,6 +88,7 @@ const InventarioSchema = new mongoose.Schema({
   qty:     { type: Number, default: 0 },
   min:     { type: Number, default: 5 },
   costo:   { type: Number, default: 0 },
+  linea:   { type: String, default: '' },
 }, { timestamps: true });
 
 const ClienteSchema = new mongoose.Schema({
