@@ -8,10 +8,16 @@ const jwt = require('jsonwebtoken');
 const app = express();
 app.use(cors({
   origin: [
-    'gestion-aluen.netlify.app',
-    'http://localhost:3001'
-  ]
+    'https://gestion-aluen.netlify.app',
+    'http://localhost:3001',
+    'http://127.0.0.1:5500',
+    'null'
+  ],
+  methods: ['GET','POST','PUT','DELETE','OPTIONS'],
+  allowedHeaders: ['Content-Type','Authorization'],
+  credentials: true
 }));
+app.options('*', cors());
 app.use(express.json());
 
 // ── CONEXIÓN ──
