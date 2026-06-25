@@ -43,14 +43,36 @@ function authRequired(req, res, next) {
 // ── RUTA LOGIN ──
 app.post('/api/auth/login', async (req, res) => {
   const { username, password } = req.body;
-  const validUser = process.env.ADMIN_USER || 'aluen_admin';
-  const validPass = process.env.ADMIN_PASS || 'Aluen2024!';
-  if (username !== validUser) return res.status(401).json({ error: 'Usuario o contraseña incorrectos' });
-  const ok = await bcrypt.compare(password, await bcrypt.hash(validPass, 10).then(() => bcrypt.hash(validPass, 10)));
-  // Comparación directa segura
-  if (password !== validPass) return res.status(401).json({ error: 'Usuario o contraseña incorrectos' });
-  const token = jwt.sign({ username, role: 'admin' }, JWT_SECRET, { expiresIn: '8h' });
-  res.json({ token, username, expiresIn: '8h' });
+  if (!username || !password) return res.status(400).json({ error: 'Usuario y contraseña requeridos' });
+
+  // 1. Verificar contra admin maestro del .env
+  const masterUser = process.env.ADMIN_USER || 'aluen_admin';
+  const masterPass = process.env.ADMIN_PASS || 'Aluen2024!';
+  if (username === masterUser && password === masterPass) {
+    const token = jwt.sign(
+      { username, role: 'admin', nombre: 'Administrador',
+        permisos: { dashboard:true, pedidos:true, ventas:true, inventario:true, productos:true, kpis:true, config:true, write:true } },
+      JWT_SECRET, { expiresIn: '8h' }
+    );
+    return res.json({ token, username, nombre: 'Administrador', role: 'admin',
+      permisos: { dashboard:true, pedidos:true, ventas:true, inventario:true, productos:true, kpis:true, config:true, write:true } });
+  }
+
+  // 2. Verificar contra usuarios en MongoDB
+  try {
+    const user = await Usuario.findOne({ username: username.trim() });
+    if (!user) return res.status(401).json({ error: 'Usuario o contraseña incorrectos' });
+    if (user.estado !== 'activo') return res.status(403).json({ error: 'Usuario inactivo. Contacta al administrador.' });
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) return res.status(401).json({ error: 'Usuario o contraseña incorrectos' });
+    const token = jwt.sign(
+      { username: user.username, role: user.rol, nombre: user.nombre, userId: user._id, permisos: user.permisos || {} },
+      JWT_SECRET, { expiresIn: '8h' }
+    );
+    return res.json({ token, username: user.username, nombre: user.nombre, role: user.rol, permisos: user.permisos || {} });
+  } catch (e) {
+    return res.status(500).json({ error: 'Error del servidor' });
+  }
 });
 
 // ── RUTA VERIFICAR TOKEN ──
