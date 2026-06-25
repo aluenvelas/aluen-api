@@ -60,11 +60,14 @@ app.get('/api/auth/verify', authRequired, (req, res) => {
 
 // ── SCHEMAS ──
 const ProductoSchema = new mongoose.Schema({
-  nombre: { type: String, required: true },
-  cat:    { type: String, default: '' },
-  costo:  { type: Number, default: 0 },
-  precio: { type: Number, default: 0 },
-  desc:   { type: String, default: '' },
+  nombre:    { type: String, required: true },
+  cat:       { type: String, default: '' },
+  linea:     { type: String, default: '' },
+  costo:     { type: Number, default: 0 },
+  precio:    { type: Number, default: 0 },
+  margenPct: { type: Number, default: 0 },
+  desc:      { type: String, default: '' },
+  invId:     { type: String, default: '' },
 }, { timestamps: true });
 
 const PedidoSchema = new mongoose.Schema({
