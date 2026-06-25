@@ -102,10 +102,21 @@ const ClienteSchema = new mongoose.Schema({
   totalGastado:  { type: Number, default: 0 },
 }, { timestamps: true });
 
+const UsuarioSchema = new mongoose.Schema({
+  nombre:    { type: String, required: true },
+  username:  { type: String, required: true, unique: true },
+  password:  { type: String, required: true },
+  rol:       { type: String, default: 'ventas', enum: ['admin','ventas','inventario','readonly'] },
+  estado:    { type: String, default: 'activo', enum: ['activo','inactivo'] },
+  email:     { type: String, default: '' },
+  permisos:  { type: Object, default: {} },
+}, { timestamps: true });
+
 const Producto   = mongoose.model('Producto',   ProductoSchema);
 const Pedido     = mongoose.model('Pedido',     PedidoSchema);
 const Inventario = mongoose.model('Inventario', InventarioSchema);
 const Cliente    = mongoose.model('Cliente',    ClienteSchema);
+const Usuario    = mongoose.model('Usuario',    UsuarioSchema);
 
 // ── HELPER CRUD ──
 function crud(router, Model) {
@@ -171,6 +182,36 @@ app.get('/api/kpis', authRequired, async (_, res) => {
     res.json({ totalVentas, unidades, ticket, costos, margenBruto, margenPct, stockBajo, pending, clientesRecurrentes, totalClientes: clientes.length, canales, ventasPorProducto });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
+
+// ── USUARIOS CRUD ──
+const rUsuarios = express.Router();
+rUsuarios.get('/', authRequired, async (req, res) => {
+  if(req.user.role !== 'admin') return res.status(403).json({ error: 'Solo admins' });
+  const u = await Usuario.find().select('-password').sort({ createdAt: -1 });
+  res.json(u);
+});
+rUsuarios.post('/', authRequired, async (req, res) => {
+  if(req.user.role !== 'admin') return res.status(403).json({ error: 'Solo admins' });
+  try {
+    const hashed = await bcrypt.hash(req.body.password, 10);
+    const u = await Usuario.create({ ...req.body, password: hashed });
+    res.status(201).json({ ...u.toObject(), password: undefined });
+  } catch(e) { res.status(400).json({ error: e.message }); }
+});
+rUsuarios.put('/:id', authRequired, async (req, res) => {
+  if(req.user.role !== 'admin') return res.status(403).json({ error: 'Solo admins' });
+  const body = { ...req.body };
+  if(body.password) body.password = await bcrypt.hash(body.password, 10);
+  else delete body.password;
+  const u = await Usuario.findByIdAndUpdate(req.params.id, body, { new: true }).select('-password');
+  res.json(u);
+});
+rUsuarios.delete('/:id', authRequired, async (req, res) => {
+  if(req.user.role !== 'admin') return res.status(403).json({ error: 'Solo admins' });
+  await Usuario.findByIdAndDelete(req.params.id);
+  res.json({ ok: true });
+});
+app.use('/api/usuarios', rUsuarios);
 
 // ── HEALTH ──
 app.get('/api/health', (_, res) => res.json({ status: 'ok', app: 'ALUEN API', time: new Date() }));
