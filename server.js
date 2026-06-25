@@ -209,12 +209,14 @@ app.get('/api/kpis', authRequired, async (_, res) => {
 // ── USUARIOS CRUD ──
 const rUsuarios = express.Router();
 rUsuarios.get('/', authRequired, async (req, res) => {
-  if(req.user.role !== 'admin') return res.status(403).json({ error: 'Solo admins' });
+  const isAdmin = req.user.role === 'admin' || req.user.rol === 'admin';
+  if(!isAdmin) return res.status(403).json({ error: 'Acceso restringido a administradores' });
   const u = await Usuario.find().select('-password').sort({ createdAt: -1 });
   res.json(u);
 });
 rUsuarios.post('/', authRequired, async (req, res) => {
-  if(req.user.role !== 'admin') return res.status(403).json({ error: 'Solo admins' });
+  const isAdmin = req.user.role === 'admin' || req.user.rol === 'admin';
+  if(!isAdmin) return res.status(403).json({ error: 'Acceso restringido a administradores' });
   try {
     const hashed = await bcrypt.hash(req.body.password, 10);
     const u = await Usuario.create({ ...req.body, password: hashed });
@@ -222,7 +224,8 @@ rUsuarios.post('/', authRequired, async (req, res) => {
   } catch(e) { res.status(400).json({ error: e.message }); }
 });
 rUsuarios.put('/:id', authRequired, async (req, res) => {
-  if(req.user.role !== 'admin') return res.status(403).json({ error: 'Solo admins' });
+  const isAdmin = req.user.role === 'admin' || req.user.rol === 'admin';
+  if(!isAdmin) return res.status(403).json({ error: 'Acceso restringido a administradores' });
   const body = { ...req.body };
   if(body.password) body.password = await bcrypt.hash(body.password, 10);
   else delete body.password;
@@ -230,7 +233,8 @@ rUsuarios.put('/:id', authRequired, async (req, res) => {
   res.json(u);
 });
 rUsuarios.delete('/:id', authRequired, async (req, res) => {
-  if(req.user.role !== 'admin') return res.status(403).json({ error: 'Solo admins' });
+  const isAdmin = req.user.role === 'admin' || req.user.rol === 'admin';
+  if(!isAdmin) return res.status(403).json({ error: 'Acceso restringido a administradores' });
   await Usuario.findByIdAndDelete(req.params.id);
   res.json({ ok: true });
 });
