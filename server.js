@@ -104,7 +104,10 @@ const PedidoSchema = new mongoose.Schema({
   canal:     { type: String, default: 'Instagram' },
   estado:    { type: String, default: 'Pendiente', enum: ['Pendiente','En proceso','Entregado','Cancelado'] },
   notas:     { type: String, default: '' },
-  items:     { type: Array, default: [] },
+  items:          { type: Array, default: [] },
+  subtotal:        { type: Number, default: 0 },
+  descuento:       { type: Number, default: 0 },
+  codigoDescuento: { type: String, default: '' },
   pago:      { type: String, default: 'Efectivo' },
   ciudad:    { type: String, default: '' },
 }, { timestamps: true });
