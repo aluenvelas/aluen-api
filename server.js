@@ -90,6 +90,7 @@ const ProductoSchema = new mongoose.Schema({
   margenPct: { type: Number, default: 0 },
   desc:      { type: String, default: '' },
   invId:     { type: String, default: '' },
+  imagen:    { type: String, default: '' },
 }, { timestamps: true });
 
 const PedidoSchema = new mongoose.Schema({
@@ -103,6 +104,7 @@ const PedidoSchema = new mongoose.Schema({
   canal:     { type: String, default: 'Instagram' },
   estado:    { type: String, default: 'Pendiente', enum: ['Pendiente','En proceso','Entregado','Cancelado'] },
   notas:     { type: String, default: '' },
+  items:     { type: Array, default: [] },
   pago:      { type: String, default: 'Efectivo' },
   ciudad:    { type: String, default: '' },
 }, { timestamps: true });
@@ -115,6 +117,7 @@ const InventarioSchema = new mongoose.Schema({
   min:     { type: Number, default: 5 },
   costo:   { type: Number, default: 0 },
   linea:   { type: String, default: '' },
+  imagen:  { type: String, default: '' },
 }, { timestamps: true });
 
 const ClienteSchema = new mongoose.Schema({
