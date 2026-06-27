@@ -184,13 +184,7 @@ rPedidos.get('/:id', async (req, res) => { const d = await Pedido.findById(req.p
 rPedidos.post('/', async (req, res) => {
   try {
     const pedido = await Pedido.create(req.body);
-    // Actualizar o crear cliente
-    const { cliente, tel, canal, total } = req.body;
-    await Cliente.findOneAndUpdate(
-      { nombre: cliente },
-      { $inc: { totalCompras: 1, totalGastado: total }, $set: { tel, canal } },
-      { upsert: true, new: true }
-    );
+    // NO crear cliente automáticamente — se gestiona desde el módulo Clientes
     res.status(201).json(pedido);
   } catch(e) { res.status(400).json({ error: e.message }); }
 });
