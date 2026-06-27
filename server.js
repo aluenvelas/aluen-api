@@ -105,6 +105,7 @@ const PedidoSchema = new mongoose.Schema({
   estado:    { type: String, default: 'Pendiente', enum: ['Pendiente','En proceso','Entregado','Cancelado'] },
   notas:     { type: String, default: '' },
   items:          { type: Array, default: [] },
+  clienteId:      { type: mongoose.Schema.Types.ObjectId, ref: 'Cliente', default: null },
   subtotal:        { type: Number, default: 0 },
   descuento:       { type: Number, default: 0 },
   codigoDescuento: { type: String, default: '' },
@@ -124,11 +125,22 @@ const InventarioSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 const ClienteSchema = new mongoose.Schema({
-  nombre:        { type: String, required: true },
-  tel:           { type: String, default: '' },
-  canal:         { type: String, default: '' },
+  codigo:        { type: String, default: '' },
+  nombres:       { type: String, required: true },
+  apellidos:     { type: String, default: '' },
+  tipoDoc:       { type: String, default: 'CC' },
+  documento:     { type: String, default: '' },
+  celular:       { type: String, default: '' },
+  correo:        { type: String, default: '' },
+  notas:         { type: String, default: '' },
+  estado:        { type: String, default: 'activo', enum: ['activo','inactivo'] },
+  puntos:        { type: Number, default: 0 },
   totalCompras:  { type: Number, default: 0 },
   totalGastado:  { type: Number, default: 0 },
+  // compatibilidad pedidos anteriores
+  nombre:        { type: String, default: '' },
+  tel:           { type: String, default: '' },
+  canal:         { type: String, default: '' },
 }, { timestamps: true });
 
 const UsuarioSchema = new mongoose.Schema({
