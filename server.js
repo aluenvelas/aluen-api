@@ -94,27 +94,26 @@ const ProductoSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 const PedidoSchema = new mongoose.Schema({
-  fecha:     { type: String, required: true },
-  cliente:   { type: String, required: true },
-  tel:       { type: String, default: '' },
-  productoId:{ type: mongoose.Schema.Types.ObjectId, ref: 'Producto' },
-  cantidad:  { type: Number, default: 1 },
-  precio:    { type: Number, default: 0 },
-  total:     { type: Number, default: 0 },
-  canal:     { type: String, default: 'Instagram' },
-  estado:    { type: String, default: 'Pendiente', enum: ['Pendiente','En proceso','Entregado','Cancelado'] },
-  notas:     { type: String, default: '' },
-  items:          { type: Array, default: [] },
-  clienteId:          { type: mongoose.Schema.Types.ObjectId, ref: 'Cliente', default: null },
-  clienteIdGuardado:  { type: String, default: '' },
-  descuentoPuntos:    { type: Boolean, default: false },
-  ultimaCompra:       { type: String, default: '' },
-  subtotal:        { type: Number, default: 0 },
-  descuento:       { type: Number, default: 0 },
-  codigoDescuento: { type: String, default: '' },
-  pago:      { type: String, default: 'Efectivo' },
-  ciudad:    { type: String, default: '' },
-}, { timestamps: true });
+  fecha:            { type: String, required: true },
+  cliente:          { type: String, required: true },
+  tel:              { type: String, default: '' },
+  productoId:       { type: mongoose.Schema.Types.Mixed, default: null },
+  cantidad:         { type: Number, default: 1 },
+  precio:           { type: Number, default: 0 },
+  total:            { type: Number, default: 0 },
+  canal:            { type: String, default: 'Instagram' },
+  estado:           { type: String, default: 'Pendiente', enum: ['Pendiente','En proceso','Entregado','Cancelado'] },
+  notas:            { type: String, default: '' },
+  items:            { type: Array, default: [] },
+  clienteId:        { type: mongoose.Schema.Types.Mixed, default: null },
+  clienteIdGuardado:{ type: String, default: '' },
+  descuentoPuntos:  { type: Boolean, default: false },
+  subtotal:         { type: Number, default: 0 },
+  descuento:        { type: Number, default: 0 },
+  codigoDescuento:  { type: String, default: '' },
+  pago:             { type: String, default: 'Efectivo' },
+  ciudad:           { type: String, default: '' },
+}, { timestamps: true, strict: false });
 
 const InventarioSchema = new mongoose.Schema({
   nombre:  { type: String, required: true },
@@ -183,12 +182,30 @@ rPedidos.get('/', async (_, res) => res.json(await Pedido.find().populate('produ
 rPedidos.get('/:id', async (req, res) => { const d = await Pedido.findById(req.params.id).populate('productoId'); d ? res.json(d) : res.status(404).json({ error: 'No encontrado' }); });
 rPedidos.post('/', async (req, res) => {
   try {
-    const pedido = await Pedido.create(req.body);
-    // NO crear cliente automáticamente — se gestiona desde el módulo Clientes
+    // Limpiar campos conflictivos antes de guardar
+    const data = { ...req.body };
+    // Si productoId es string vacío, quitarlo
+    if(!data.productoId) delete data.productoId;
+    // Si clienteId es string vacío, quitarlo
+    if(!data.clienteId || data.clienteId === '') delete data.clienteId;
+    const pedido = await Pedido.create(data);
     res.status(201).json(pedido);
-  } catch(e) { res.status(400).json({ error: e.message }); }
+  } catch(e) {
+    console.error('Error creando pedido:', e.message, JSON.stringify(req.body).slice(0,300));
+    res.status(400).json({ error: e.message });
+  }
 });
-rPedidos.put('/:id', async (req, res) => { try { res.json(await Pedido.findByIdAndUpdate(req.params.id, req.body, { new: true })); } catch(e) { res.status(400).json({ error: e.message }); } });
+rPedidos.put('/:id', async (req, res) => {
+  try {
+    const data = { ...req.body };
+    if(!data.productoId) delete data.productoId;
+    if(!data.clienteId || data.clienteId === '') delete data.clienteId;
+    res.json(await Pedido.findByIdAndUpdate(req.params.id, data, { new: true }));
+  } catch(e) {
+    console.error('Error actualizando pedido:', e.message);
+    res.status(400).json({ error: e.message });
+  }
+});
 rPedidos.delete('/:id', async (req, res) => { await Pedido.findByIdAndDelete(req.params.id); res.json({ ok: true }); });
 app.use('/api/pedidos', authRequired, rPedidos);
 
